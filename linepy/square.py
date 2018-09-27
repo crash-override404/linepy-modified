@@ -123,6 +123,7 @@ class Square(object):
         msg.text = text
         msg.contentType = contentType
         msg.contentMetadata = contentMetadata
+        msg.relatedMessageServiceCode = 2
         rq.squareMessage.message = msg
         rq.squareMessage.fromType = 4
         if squareChatMid not in self._messageReq:
