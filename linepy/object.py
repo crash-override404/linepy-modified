@@ -89,6 +89,12 @@ class Object(object):
             raise Exception('Invalid returnAs value')
         if type not in ['image','gif','video','audio','file']:
             raise Exception('Invalid type value')
+        try:
+            import magic
+        except ImportError:
+            raise Exception('You must install python-magic from pip')
+        mime = magic.Magic(mime=True)
+        contentType = mime.from_file(path)
         data = open(path, 'rb').read()
         params = {
             'name': '%s' % str(time.time()*1000),
@@ -98,24 +104,14 @@ class Object(object):
             'type': '%s' % str(type),
             'ver': '1.0'
         }
-        if type == 'image':
-            contentType = 'image/jpeg'
-        elif type == 'gif':
-            contentType = 'image/gif'
-        elif type == 'video':
+        if type == 'video':
             params.update({'duration': '60000'})
-            contentType = 'video/mp4'
         elif type == 'audio':
-            params.update({'duration': '0'})
-            contentType = 'audio/mp3'
+            params.update({'duration': '60000'})
+        elif type == 'gif':
+            params.update({'type': 'image', 'cat': 'original'})
         elif type == 'file':
             params.update({'name': name})
-            try:
-                import magic
-            except ImportError:
-                raise Exception('You must install python-magic from pip')
-            mime = magic.Magic(mime=True)
-            contentType = mime.from_file(path)
         headers = self.server.additionalHeaders(self.server.Headers, {
             'Content-Type': contentType,
             'Content-Length': str(len(data)),
