@@ -30,49 +30,49 @@ class Square(object):
     """Object"""
 
     @loggedIn
-    def sendSquareImage(self, squareChatMid, path): # Under development
+    def sendSquareImage(self, squareChatMid, path):
         return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='image', returnAs='bool')
 
     @loggedIn
-    def sendSquareImageWithURL(self, squareChatMid, url): # Under development
+    def sendSquareImageWithURL(self, squareChatMid, url):
         path = self.downloadFileURL(url, 'path')
         return self.sendSquareImage(squareChatMid, path)
 
     @loggedIn
-    def sendSquareGIF(self, squareChatMid, path): # Under development
+    def sendSquareGIF(self, squareChatMid, path):
         return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='gif', returnAs='bool')
 
     @loggedIn
-    def sendSquareGIFWithURL(self, squareChatMid, url): # Under development
+    def sendSquareGIFWithURL(self, squareChatMid, url):
         path = self.downloadFileURL(url, 'path')
         return self.sendSquareGIF(squareChatMid, path)
 
     @loggedIn
-    def sendSquareVideo(self, squareChatMid, path): # Under development
+    def sendSquareVideo(self, squareChatMid, path):
         return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='video', returnAs='bool')
 
     @loggedIn
-    def sendSquareVideoWithURL(self, squareChatMid, url): # Under development
+    def sendSquareVideoWithURL(self, squareChatMid, url):
         path = self.downloadFileURL(url, 'path')
         return self.sendSquareVideo(squareChatMid, path)
 
     @loggedIn
-    def sendSquareAudio(self, squareChatMid, path): # Under development
+    def sendSquareAudio(self, squareChatMid, path):
         return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='audio', returnAs='bool')
 
     @loggedIn
-    def sendSquareAudioWithURL(self, squareChatMid, url): # Under development
+    def sendSquareAudioWithURL(self, squareChatMid, url):
         path = self.downloadFileURL(url, 'path')
         return self.sendSquareAudio(squareChatMid, path)
 
     @loggedIn
-    def sendSquareFile(self, squareChatMid, path): # Under development
-        return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='file', returnAs='bool')
+    def sendSquareFile(self, squareChatMid, path, filename=''):
+        return self.uploadObjSquare(squareChatMid=squareChatMid, path=path, type='file', returnAs='bool', name=filename)
 
     @loggedIn
-    def sendSquareFileWithURL(self, squareChatMid, url, fileName=''): # Under development
+    def sendSquareFileWithURL(self, squareChatMid, url, filename=''):
         path = self.downloadFileURL(url, 'path')
-        return self.sendSquareFile(squareChatMid, path, fileName)
+        return self.sendSquareFile(squareChatMid, path, filename)
 
     """Square Message"""
         
@@ -85,6 +85,44 @@ class Square(object):
         msg.to = squareChatMid
         msg.text = text
         msg.contentType, msg.contentMetadata = contentType, contentMetadata
+        rq.squareMessage.message = msg
+        rq.squareMessage.fromType = 4
+        if squareChatMid not in self._messageReq:
+            self._messageReq[squareChatMid] = -1
+        self._messageReq[squareChatMid] += 1
+        rq.squareMessage.squareMessageRevision = self._messageReq[squareChatMid]
+        return self.square.sendMessage(rq)
+
+    @loggedIn
+    def sendSquareMessageWithFooter(self, squareChatMid, text, title=None, link=None, iconlink=None, contentMetadata={}):
+        rq = SendMessageRequest()
+        rq.squareChatMid = squareChatMid
+        rq.squareMessage = SquareMessage()
+        msg = Message()
+        msg.to = squareChatMid
+        msg.text = text
+        msg.contentType = 0
+        msg.contentMetadata = self.generateMessageFooter(title, link, iconlink)
+        if contentMetadata:
+            msg.contentMetadata.update(contentMetadata)
+        rq.squareMessage.message = msg
+        rq.squareMessage.fromType = 4
+        if squareChatMid not in self._messageReq:
+            self._messageReq[squareChatMid] = -1
+        self._messageReq[squareChatMid] += 1
+        rq.squareMessage.squareMessageRevision = self._messageReq[squareChatMid]
+        return self.square.sendMessage(rq)
+
+    @loggedIn
+    def sendSquareReplyMessage(self, relatedMessageId, squareChatMid, text, contentMetadata={}, contentType=0):
+        rq = SendMessageRequest()
+        rq.squareChatMid = squareChatMid
+        rq.squareMessage = SquareMessage()
+        msg = self.generateReplyMessage(relatedMessageId)
+        msg.to = squareChatMid
+        msg.text = text
+        msg.contentType = contentType
+        msg.contentMetadata = contentMetadata
         rq.squareMessage.message = msg
         rq.squareMessage.fromType = 4
         if squareChatMid not in self._messageReq:
