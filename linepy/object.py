@@ -84,7 +84,7 @@ class Object(object):
     """Object"""
 
     @loggedIn
-    def uploadObjSquare(self, squareChatMid, path, type='image', returnAs='bool'):
+    def uploadObjSquare(self, squareChatMid, path, type='image', returnAs='bool', name=None):
         if returnAs not in ['bool']:
             raise Exception('Invalid returnAs value')
         if type not in ['image','gif','video','audio','file']:
@@ -108,6 +108,14 @@ class Object(object):
         elif type == 'audio':
             params.update({'duration': '0'})
             contentType = 'audio/mp3'
+        elif type == 'file':
+            params.update({'name': name})
+            try:
+                import magic
+            except ImportError:
+                raise Exception('You must install python-magic from pip')
+            mime = magic.Magic(mime=True)
+            contentType = mime.from_file(path)
         headers = self.server.additionalHeaders(self.server.Headers, {
             'Content-Type': contentType,
             'Content-Length': str(len(data)),
