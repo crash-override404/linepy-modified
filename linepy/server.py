@@ -9,7 +9,7 @@ class Server(Config):
 
     def __init__(self, appType=None):
         self.Headers = {}
-        self.channelHeaders = {}
+        self.timelineHeaders = {}
         Config.__init__(self, appType)
 
     def parseUrl(self, path):
