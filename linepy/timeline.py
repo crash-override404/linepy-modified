@@ -110,6 +110,7 @@ class Timeline(Channel):
         params = {'homeId': mid, 'sourceType': 'TIMELINE'}
         url = self.server.urlEncode(self.server.LINE_TIMELINE_API, '/v39/comment/create.json', params)
         data = {'commentText': text, 'activityExternalId': postId, 'actorId': mid}
+        data = json.dumps(data)
         r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
         return r.json()
 
@@ -120,6 +121,7 @@ class Timeline(Channel):
         params = {'homeId': mid, 'sourceType': 'TIMELINE'}
         url = self.server.urlEncode(self.server.LINE_TIMELINE_API, '/v39/comment/delete.json', params)
         data = {'commentId': commentId, 'activityExternalId': postId, 'actorId': mid}
+        data = json.dumps(data)
         r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
         return r.json()
 
@@ -132,6 +134,7 @@ class Timeline(Channel):
         params = {'homeId': mid, 'sourceType': 'TIMELINE'}
         url = self.server.urlEncode(self.server.LINE_TIMELINE_API, '/v39/like/create.json', params)
         data = {'likeType': likeType, 'activityExternalId': postId, 'actorId': mid}
+        data = json.dumps(data)
         r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
         return r.json()
 
@@ -142,6 +145,7 @@ class Timeline(Channel):
         params = {'homeId': mid, 'sourceType': 'TIMELINE'}
         url = self.server.urlEncode(self.server.LINE_TIMELINE_API, '/v39/like/cancel.json', params)
         data = {'activityExternalId': postId, 'actorId': mid}
+        data = json.dumps(data)
         r = self.server.postContent(url, data=data, headers=self.server.timelineHeaders)
         return r.json()
 
