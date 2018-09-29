@@ -11,4 +11,4 @@ __author__          = 'Fadhiil Rachman'
 __author_email__    = 'fadhiilrachman@gmail.com'
 __url__             = 'http://github.com/fadhiilrachman/line-py'
 
-__all__ = ['LINE', 'Channel', 'OEPoll', 'OpType']
+__all__ = ['LINE', 'Channel', 'OEPoll', 'OpType', '__modified__']
