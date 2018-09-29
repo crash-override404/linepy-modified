@@ -3,6 +3,7 @@ from .channel import Channel
 from .oepoll import OEPoll
 from akad.ttypes import OpType
 
+__modified__        = 'Zero Cool'
 __copyright__       = 'Copyright 2018 by Fadhiil Rachman'
 __version__         = '3.0.8'
 __license__         = 'BSD-3-Clause'
