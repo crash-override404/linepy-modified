@@ -213,6 +213,54 @@ class Talk(object):
         self._messageReq[to] += 1
         return self.talk.sendMessage(self._messageReq[to], msg)
 
+    @loggedIn
+    def sendMention(self, to, mid, firstmessage='', lastmessage=''):
+        arrData = ""
+        text = "%s " %(str(firstmessage))
+        arr = []
+        mention = "@zeroxyuuki "
+        slen = str(len(text))
+        elen = str(len(text) + len(mention) - 1)
+        arrData = {'S':slen, 'E':elen, 'M':mid}
+        arr.append(arrData)
+        text += mention + str(lastmessage)
+        self.sendMessage(to, text, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+
+    @loggedIn
+    def sendMentionV2(to, text="", mids=[], isUnicode=False):
+        arrData = ""
+        arr = []
+        mention = "@zeroxyuuki "
+        if mids == []:
+            raise Exception("Invalid mids")
+        if "@!" in text:
+            if text.count("@!") != len(mids):
+                raise Exception("Invalid mids")
+            texts = text.split("@!")
+            textx = ""
+            unicode = ""
+            if isUnicode:
+                for mid in mids:
+                    unicode += str(texts[mids.index(mid)].encode('unicode-escape'))
+                    textx += str(texts[mids.index(mid)])
+                    slen = len(textx) if unicode == textx else len(textx) + unicode.count('U0')
+                    elen = len(textx) + 15
+                    arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                    arr.append(arrData)
+                    textx += mention
+            else:
+                for mid in mids:
+                    textx += str(texts[mids.index(mid)])
+                    slen = len(textx)
+                    elen = len(textx) + 15
+                    arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                    arr.append(arrData)
+                    textx += mention
+            textx += str(texts[len(mids)])
+        else:
+            raise Exception("Invalid mention position")
+        self.sendMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+
     """ Usage:
         @to Integer
         @text String
