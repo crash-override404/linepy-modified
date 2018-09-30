@@ -121,7 +121,7 @@ class THttpClient(TTransportBase):
         return _f
 
     def flush(self):
-        if self.__custom_thrift and time.time() - self.__time >= 120:
+        if self.__custom_thrift and time.time() - self.__time >= 60:
             self.close(); self.open(); self.__time = time.time()
         elif not self.__custom_thrift:
             if self.isOpen():
