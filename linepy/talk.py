@@ -227,7 +227,7 @@ class Talk(object):
         self.sendMessage(to, text, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
 
     @loggedIn
-    def sendMentionV2(to, text="", mids=[], isUnicode=False):
+    def sendMentionV2(self, to, text="", mids=[], isUnicode=False):
         arrData = ""
         arr = []
         mention = "@zeroxyuuki "
