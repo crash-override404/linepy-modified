@@ -146,7 +146,7 @@ class Square(object):
         self.sendSquareMessage(to, text, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
 
     @loggedIn
-    def sendSquareMentionV2(to, text="", mids=[], isUnicode=False):
+    def sendSquareMentionV2(self, to, text="", mids=[], isUnicode=False):
         arrData = ""
         arr = []
         mention = "@zeroxyuuki "
