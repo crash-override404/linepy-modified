@@ -60,8 +60,8 @@ class Auth(object):
         return lReq
 
     def loginWithCredential(self, _id, passwd):
-        if systemName is None:
-            systemName=self.server.SYSTEM_NAME
+        if self.systemName is None:
+            self.systemName=self.server.SYSTEM_NAME
         if self.server.EMAIL_REGEX.match(_id):
             self.provider = IdentityProvider.LINE       # LINE
         else:
@@ -85,7 +85,6 @@ class Auth(object):
                 self.certificate = f.read()
         except:
             if self.certificate is not None:
-                self.certificate = certificate
                 if os.path.exists(self.certificate):
                     with open(self.certificate, 'r') as f:
                         self.certificate = f.read()
@@ -96,7 +95,7 @@ class Auth(object):
             'identityProvider': self.provider,
             'identifier': rsaKey.keynm,
             'password': crypto,
-            'keepLoggedIn': keepLoggedIn,
+            'keepLoggedIn': self.keepLoggedIn,
             'accessLocation': self.server.IP_ADDR,
             'systemName': self.systemName,
             'certificate': self.certificate,
