@@ -133,6 +133,54 @@ class Square(object):
         return self.square.sendMessage(rq)
 
     @loggedIn
+    def sendSquareMention(self, to, mid, firstmessage='', lastmessage=''):
+        arrData = ""
+        text = "%s " %(str(firstmessage))
+        arr = []
+        mention = "@zeroxyuuki "
+        slen = str(len(text))
+        elen = str(len(text) + len(mention) - 1)
+        arrData = {'S':slen, 'E':elen, 'M':mid}
+        arr.append(arrData)
+        text += mention + str(lastmessage)
+        self.sendSquareMessage(to, text, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+
+    @loggedIn
+    def sendSquareMentionV2(to, text="", mids=[], isUnicode=False):
+        arrData = ""
+        arr = []
+        mention = "@zeroxyuuki "
+        if mids == []:
+            raise Exception("Invalid mids")
+        if "@!" in text:
+            if text.count("@!") != len(mids):
+                raise Exception("Invalid mids")
+            texts = text.split("@!")
+            textx = ""
+            unicode = ""
+            if isUnicode:
+                for mid in mids:
+                    unicode += str(texts[mids.index(mid)].encode('unicode-escape'))
+                    textx += str(texts[mids.index(mid)])
+                    slen = len(textx) if unicode == textx else len(textx) + unicode.count('U0')
+                    elen = len(textx) + 15
+                    arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                    arr.append(arrData)
+                    textx += mention
+            else:
+                for mid in mids:
+                    textx += str(texts[mids.index(mid)])
+                    slen = len(textx)
+                    elen = len(textx) + 15
+                    arrData = {'S':str(slen), 'E':str(elen - 4), 'M':mid}
+                    arr.append(arrData)
+                    textx += mention
+            textx += str(texts[len(mids)])
+        else:
+            raise Exception("Invalid mention position")
+        self.sendSquareMessage(to, textx, {'MENTION': str('{"MENTIONEES":' + json.dumps(arr) + '}')}, 0)
+
+    @loggedIn
     def sendSquareSticker(self, squareChatMid, packageId, stickerId):
         contentMetadata = {
             'STKVER': '100',
