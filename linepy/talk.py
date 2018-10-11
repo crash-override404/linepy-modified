@@ -112,7 +112,6 @@ class Talk(object):
         if to not in self._messageReq:
             self._messageReq[to] = -1
         self._messageReq[to] += 1
-        self._msgReq += 1
         return self.talk.sendMessage(self._messageReq[to], msg)
 
     @loggedIn
