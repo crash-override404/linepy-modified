@@ -58,6 +58,7 @@ class THttpClient(TTransportBase):
         self.__custom_headers = None
         self.__time = time.time()
         self.__custom_thrift = customThrift
+        self.__loop = 0
 
     @staticmethod
     def basic_proxy_auth_header(proxy):
@@ -121,8 +122,12 @@ class THttpClient(TTransportBase):
         return _f
 
     def flush(self):
-        if self.__custom_thrift and time.time() - self.__time >= 60:
-            self.close(); self.open(); self.__time = time.time()
+        if self.__custom_thrift:
+            if self.__loop <= 2:
+                if self.isOpen(): self.close()
+                self.open(); self.__loop += 1
+            elif time.time() - self.__time > 90:
+                self.close(); self.open(); self.__time = time.time()
         elif not self.__custom_thrift:
             if self.isOpen():
                 self.close()
