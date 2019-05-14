@@ -8,9 +8,9 @@ def loggedIn(func):
             if args[0].isLogin:
                 return func(*args, **kwargs)
             else:
-                args[0].callback.other('You want to call the function, you must login to LINE')
+                args[0].callback.default('You want to call the function, you must login to LINE')
         else:
-            args[0].callback.other('Your LINE account doesn\'t support Square')
+            args[0].callback.default('Your LINE account doesn\'t support Square')
     return checkLogin
 
 class Square(object):
