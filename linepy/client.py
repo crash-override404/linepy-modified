@@ -8,6 +8,7 @@ from .call import Call
 from .timeline import Timeline
 from .server import Server
 from .shop import Shop
+from .callback import Callback
 
 class LINE(Auth, Models, Talk, Square, Call, Timeline, Shop):
 
@@ -25,6 +26,7 @@ class LINE(Auth, Models, Talk, Square, Call, Timeline, Shop):
             - **channelId**: Channel ID to login Timeline. Default: None
             - **keepLoggedIn**: Keep logged in if succesfull login. Default: True
             - **customThrift**: Increase speed thrift with custom thrift. Default: False
+            - **callback**: Use custom callback.
         :return:
         """
         self.certificate = kwargs.pop('certificate', None)
@@ -36,7 +38,10 @@ class LINE(Auth, Models, Talk, Square, Call, Timeline, Shop):
         self.keepLoggedIn = kwargs.pop('keepLoggedIn', True)
         self.customThrift = kwargs.pop('customThrift', False)
         self.ignoreSquare = kwargs.pop('ignoreSquare', True)
+        callback = kwargs.pop("callback", None)
         Auth.__init__(self)
+        if callback and callable(callback):
+            self.callback = Callback(callback)
         if not (idOrAuthToken or idOrAuthToken and passwd):
             self.loginWithQrCode()
         if idOrAuthToken and passwd:
