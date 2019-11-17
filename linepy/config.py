@@ -29,25 +29,35 @@ class Config(object):
     }
 
     APP_VERSION = {
-        'ANDROID': '8.14.2',
-        'IOS': '8.14.2',
-        'ANDROIDLITE': '2.1.0',
+        'ANDROID': '9.19.2',
+        'IOS': '9.15.1',
+        'ANDROIDLITE': '2.10.0',
         'BIZANDROID': '1.7.2',
         'BIZIOS': '1.7.5',
         'BIZWEB': '1.0.22',
-        'DESKTOPWIN': '5.9.0',
-        'DESKTOPMAC': '5.9.0',
-        'IOSIPAD': '8.14.2',
-        'CHROMEOS': '2.1.5',
-        'WIN10': '5.5.5',
-        'DEFAULT': '8.11.0'
+        'DESKTOPWIN': '5.20.2',
+        'DESKTOPMAC': '5.20.2',
+        'IOSIPAD': '9.15.1',
+        'CHROMEOS': '2.3.0',
+        'DEFAULT': '9.19.2'
+    }
+    
+    SYSTEM_VERSION = {
+        'ANDROID': '10.0',
+        'IOS': '13.2.2',
+        'ANDROIDLITE': '10.0',
+        'DESKTOPWIN': '10.0',
+        'DESKTOPMAC': '10.15.1',
+        'IOSIPAD': '13.2.2',
+        'CHROMEOS': '80.0',
+        'DEFAULT': '10.0'
     }
 
-    APP_TYPE    = 'IOSIPAD'
+    APP_TYPE    = 'DESKTOPWIN'
     APP_VER     = APP_VERSION[APP_TYPE] if APP_TYPE in APP_VERSION else APP_VERSION['DEFAULT']
     CARRIER     = '51089, 1-0'
     SYSTEM_NAME = 'FDLRCN'
-    SYSTEM_VER  = '11.2.5'
+    SYSTEM_VER  = SYSTEM_VERSION[APP_TYPE] if APP_TYPE in SYSTEM_VERSION else SYSTEM_VERSION['DEFAULT']
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
