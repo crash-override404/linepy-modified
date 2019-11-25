@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from .transport import THttpClient
 from thrift.protocol import TCompactProtocol
-from akad import AuthService, TalkService, ChannelService, CallService, SquareService, ShopService
+from akad import AuthService, TalkService, ChannelService, CallService, SquareService, LiffService, ShopService
 
 class Session:
 
@@ -13,10 +13,10 @@ class Session:
     def Auth(self, isopen=True):
         self.transport = THttpClient(self.host, customThrift=self.customThrift)
         self.transport.setCustomHeaders(self.headers)
-        
+
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._auth  = AuthService.Client(self.protocol)
-        
+
         if isopen:
             self.transport.open()
 
@@ -25,10 +25,9 @@ class Session:
     def Talk(self, isopen=True):
         self.transport = THttpClient(self.host, customThrift=self.customThrift)
         self.transport.setCustomHeaders(self.headers)
-        
+
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._talk  = TalkService.Client(self.protocol)
-        
         if isopen:
             self.transport.open()
 
@@ -40,7 +39,7 @@ class Session:
 
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._channel  = ChannelService.Client(self.protocol)
-        
+
         if isopen:
             self.transport.open()
 
@@ -52,7 +51,7 @@ class Session:
 
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._call  = CallService.Client(self.protocol)
-        
+
         if isopen:
             self.transport.open()
 
@@ -64,7 +63,7 @@ class Session:
 
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._square  = SquareService.Client(self.protocol)
-        
+
         if isopen:
             self.transport.open()
 
@@ -76,8 +75,20 @@ class Session:
 
         self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
         self._shop  = ShopService.Client(self.protocol)
-        
+
         if isopen:
             self.transport.open()
 
         return self._shop
+
+    def Liff(self, isopen=True):
+        self.transport = THttpClient(self.host, customThrift=self.customThrift)
+        self.transport.setCustomHeaders(self.headers)
+
+        self.protocol = TCompactProtocol.TCompactProtocol(self.transport)
+        self._liff  = LiffService.Client(self.protocol)
+
+        if isopen:
+            self.transport.open()
+
+        return self._liff

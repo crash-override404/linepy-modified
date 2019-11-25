@@ -18,7 +18,7 @@ class Auth(object):
             'User-Agent': self.server.USER_AGENT,
             'X-Line-Application': self.server.APP_NAME,
             'X-Line-Carrier': self.server.CARRIER,
-            'x-lal': "in_ID"
+            'x-lal': 'en_US'
         })
 
     def __loadSession(self):
@@ -27,8 +27,9 @@ class Auth(object):
         self.call       = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_CALL_QUERY_PATH, self.customThrift).Call()
         self.channel    = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_CHAN_QUERY_PATH, self.customThrift).Channel()
         self.square     = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_SQUARE_QUERY_PATH, self.customThrift).Square()
+        self.liff       = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_LIFF_QUERY_PATH, self.customThrift).Liff()
         self.shop       = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_SHOP_QUERY_PATH, self.customThrift).Shop()
-        
+
         self.revision = self.poll.getLastOpRevision()
         self.isLogin = True
 
@@ -196,4 +197,5 @@ class Auth(object):
         print(str)
 
     def logout(self):
+        self.isLogin = False
         self.auth.logoutZ()

@@ -7,10 +7,11 @@ from .square import Square
 from .call import Call
 from .timeline import Timeline
 from .server import Server
+from .liff import Liff
 from .shop import Shop
 from .callback import Callback
 
-class LINE(Auth, Models, Talk, Square, Call, Timeline, Shop):
+class LINE(Auth, Models, Talk, Square, Call, Timeline, Liff, Shop):
 
     def __init__(self, idOrAuthToken=None, passwd=None, **kwargs):
         """
@@ -61,4 +62,5 @@ class LINE(Auth, Models, Talk, Square, Call, Timeline, Shop):
         Square.__init__(self)
         Call.__init__(self)
         Timeline.__init__(self)
+        Liff.__init__(self)
         Shop.__init__(self)

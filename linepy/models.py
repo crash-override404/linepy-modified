@@ -3,7 +3,7 @@ from datetime import datetime
 from .object import Object
 from random import randint
 
-import json, shutil, time, os, base64, tempfile
+import json, shutil, time, os, base64, tempfile, re
     
 class Models(Object):
         
@@ -46,6 +46,29 @@ class Models(Object):
             raise Exception('Download file failure.')
 
     """Generator"""
+
+    def validateURL(self, url, returnAs='bool'):
+        if returnAs not in ['bool', 're']:
+            raise Exception('Invalid returnAs value')
+        result = re.match(self.server.URL_REGEX, url)
+        if returnAs == 'bool':
+            if result:
+                return True
+            else:
+                return False
+        return result
+
+    def findMids(self, text):
+        return self.server.MID_REGEX.findall(text)
+
+    def findGids(self, text):
+        return self.server.GID_REGEX.findall(text)
+
+    def findRids(self, text):
+        return self.server.RID_REGEX.findall(text)
+
+    def findAllIds(self, text):
+        return self.server.ALLIDS_REGEX.findall(text)
 
     def genTempFile(self, returnAs='path'):
         try:
