@@ -33,27 +33,24 @@ class Config(object):
     }
 
     APP_VERSION = {
-        'ANDROID': '9.19.2',
-        'IOS': '9.15.1',
-        'ANDROIDLITE': '2.10.0',
-        'BIZANDROID': '1.7.2',
-        'BIZIOS': '1.7.5',
-        'BIZWEB': '1.0.22',
-        'DESKTOPWIN': '5.20.2',
-        'DESKTOPMAC': '5.20.2',
-        'IOSIPAD': '9.15.1',
-        'CHROMEOS': '2.3.0',
-        'DEFAULT': '9.19.2'
+        'ANDROID': '10.1.1',
+        'IOS': '10.1.1',
+        'ANDROIDLITE': '2.11.1',
+        'DESKTOPWIN': '5.21.3',
+        'DESKTOPMAC': '5.21.3',
+        'IOSIPAD': '10.1.1',
+        'CHROMEOS': '2.3.3',
+        'DEFAULT': '10.1.1'
     }
-    
+
     SYSTEM_VERSION = {
         'ANDROID': '10.0',
-        'IOS': '13.2.2',
+        'IOS': '13.3.1',
         'ANDROIDLITE': '10.0',
         'DESKTOPWIN': '10.0',
         'DESKTOPMAC': '10.15.1',
-        'IOSIPAD': '13.2.2',
-        'CHROMEOS': '80.0',
+        'IOSIPAD': '13.3.1',
+        'CHROMEOS': '79.0',
         'DEFAULT': '10.0'
     }
 
