@@ -2,6 +2,7 @@
 from io import BytesIO
 from six.moves import urllib, http_client
 import os, socket, sys, warnings, base64, time, json, asyncio, six
+import hyper, httpx, httplib2
 
 from thrift.transport.TTransport import TTransportBase
 try:
@@ -10,19 +11,19 @@ except ImportError:
     fastbinary = None
 
 class THttpClient(TTransportBase):
-    """Http implementation of TTransport base."""
+    '''Http implementation of TTransport base.'''
 
-    def __init__(self, uri_or_host, port=None, path=None, customThrift=False):
-        """THttpClient supports two different types constructor parameters.
+    def __init__(self, uri_or_host, port=None, path=None, customThrift=False, request='httplib', http2=False, proxy_host=None, proxy_port=None, proxy_auth=None):
+        '''THttpClient supports two different types constructor parameters.
 
         THttpClient(host, port, path) - deprecated
         THttpClient(uri)
 
         Only the second supports https.
-        """
+        '''
         if port is not None:
             warnings.warn(
-                "Please use the THttpClient('http://host:port/path') syntax",
+                'Please use the THttpClient("http://host:port/path") syntax',
                 DeprecationWarning,
                 stacklevel=2
             )
@@ -44,16 +45,40 @@ class THttpClient(TTransportBase):
             if parsed.query:
                 self.path += '?%s' % parsed.query
         proxy = None
-        self.realhost = self.realport = self.proxy_auth = None
+        self.request = request
+        self.http2 = http2
+        self.realhost = proxy_host
+        self.realport = proxy_port
+        self.proxy_auth = proxy_auth
         self.__wbuf = BytesIO()
-        if customThrift:
-            if self.scheme == 'http':
-                self.__http = http_client.HTTPConnection(self.host, self.port)
-            elif self.scheme == 'https':
-                self.__http = http_client.HTTPSConnection(self.host, self.port)
+        if self.scheme == 'https' and self.using_proxy() and self.proxy_auth:
+            self.proxy_headers = {'Proxy-Authorization': self.proxy_auth}
         else:
-            self.__http = None
+            self.proxy_headers = None
+        self.url = '%s://%s:%s%s' % (self.scheme, self.host, self.port, self.path)
+        if customThrift:
+            if self.request == 'hyper':
+                if self.http2:
+                    self.__http = hyper.HTTP20Connection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
+                else:
+                    self.__http = hyper.HTTPConnection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
+            elif self.request == 'httpx':
+                self.__http = httpx.AsyncClient(base_url='%s://%s' % (self.scheme, self.host), http2=self.http2)
+            else:
+                if self.http2:
+                    self.__http = httplib2.Http()
+                elif self.scheme == 'http':
+                    self.__http = http_client.HTTPConnection(self.host, self.port)
+                elif self.scheme == 'https':
+                    self.__http = http_client.HTTPSConnection(self.host, self.port)
+                    if self.using_proxy():
+                        self.__http.set_tunnel(self.realhost, self.realport, self.proxy_headers)
+        else:
+             self.__http = None
+        self.__async_loop = asyncio.get_event_loop() if self.request == 'httpx' else None
         self.__http_response = None
+        self.__response_data = None
+        self.__last_read = 0
         self.__timeout = None
         self.__custom_headers = None
         self.__time = time.time()
@@ -64,27 +89,39 @@ class THttpClient(TTransportBase):
     def basic_proxy_auth_header(proxy):
         if proxy is None or not proxy.username:
             return None
-        ap = "%s:%s" % (urllib.parse.unquote(proxy.username),
+        ap = '%s:%s' % (urllib.parse.unquote(proxy.username),
                         urllib.parse.unquote(proxy.password))
         cr = base64.b64encode(ap).strip()
-        return "Basic " + cr
+        return 'Basic ' + cr
 
     def using_proxy(self):
         return self.realhost is not None
 
     def open(self):
-        if self.scheme == 'http':
-            self.__http = http_client.HTTPConnection(self.host, self.port)
-        elif self.scheme == 'https':
-            self.__http = http_client.HTTPSConnection(self.host, self.port)
-            if self.using_proxy():
-                self.__http.set_tunnel(self.realhost, self.realport,
-                                       {"Proxy-Authorization": self.proxy_auth})
+        if self.request == 'hyper':
+            if self.http2:
+                self.__http = hyper.HTTP20Connection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
+            else:
+                self.__http = hyper.HTTPConnection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
+        elif self.request == 'httpx':
+            self.__http = httpx.AsyncClient(base_url='%s://%s' % (self.scheme, self.host), http2=self.http2)
+        else:
+            if self.http2:
+                self.__http = httplib2.Http()
+            elif self.scheme == 'http':
+                self.__http = http_client.HTTPConnection(self.host, self.port)
+            elif self.scheme == 'https':
+                self.__http = http_client.HTTPSConnection(self.host, self.port)
+                if self.using_proxy():
+                    self.__http.set_tunnel(self.realhost, self.realport, self.proxy_headers)
 
     def close(self):
-        self.__http.close()
+        if self.request != 'httpx':
+            self.__http.close()
         self.__http = None
         self.__http_response = None
+        self.__response_data = None
+        self.__last_read = 0
 
     def getHeaders(self):
         return self.headers
@@ -105,7 +142,14 @@ class THttpClient(TTransportBase):
         self.__custom_headers = headers
 
     def read(self, sz):
-        return self.__http_response.read(sz)
+        if self.request == 'httpx' or (self.request == 'httplib' and self.http2):
+            max_sz = self.__last_read + sz
+            min_sz = self.__last_read
+            self.__last_read = max_sz
+            content = self.__response_data[min_sz:max_sz]
+        else:
+            content = self.__http_response.read(sz)
+        return content
 
     def write(self, buf):
         self.__wbuf.write(buf)
@@ -121,6 +165,18 @@ class THttpClient(TTransportBase):
             return result
         return _f
 
+    async def httpx_flush(self, data, headers):
+        # Building httpx request
+        request = self.__http.build_request('POST', self.path, data=data, headers=headers)
+
+        # Sending httpx request
+        self.__http_response = await self.__http.send(request)
+        self.code = self.__http_response.status_code
+        self.message = self.__http_response.reason_phrase
+        self.headers = self.__http_response.headers
+        self.__response_data = self.__http_response.read()
+        self.__last_read = 0
+
     def flush(self):
         if self.__custom_thrift:
             if self.__loop <= 2:
@@ -128,52 +184,80 @@ class THttpClient(TTransportBase):
                 self.open(); self.__loop += 1
             elif time.time() - self.__time > 90:
                 self.close(); self.open(); self.__time = time.time()
-        elif not self.__custom_thrift:
+        else:
             if self.isOpen():
                 self.close()
             self.open()
-        else:
-            pass
 
         # Pull data out of buffer
         data = self.__wbuf.getvalue()
         self.__wbuf = BytesIO()
-
-        # HTTP request
-        if self.using_proxy() and self.scheme == "http":
-            # need full URL of real host for HTTP proxy here (HTTPS uses CONNECT tunnel)
-            self.__http.putrequest('POST', "http://%s:%s%s" %
-                                   (self.realhost, self.realport, self.path))
-        else:
-            self.__http.putrequest('POST', self.path)
-
-        # Write headers
-        self.__http.putheader('Content-Type', 'application/x-thrift')
-        self.__http.putheader('Content-Length', str(len(data)))
-        if self.using_proxy() and self.scheme == "http" and self.proxy_auth is not None:
-            self.__http.putheader("Proxy-Authorization", self.proxy_auth)
 
         if not self.__custom_headers or 'User-Agent' not in self.__custom_headers:
             user_agent = 'Python/THttpClient'
             script = os.path.basename(sys.argv[0])
             if script:
                 user_agent = '%s (%s)' % (user_agent, urllib.parse.quote(script))
-            self.__http.putheader('User-Agent', user_agent)
+        else:
+            user_agent = None
+        if self.request == 'hyper':
+            headers = {'Content-Type': 'application/x-thrift', 'Content-Length': str(len(data)), 'User-Agent': user_agent}
+            if self.__custom_headers:
+                headers.update(self.__custom_headers)
 
-        if self.__custom_headers:
-            for key, val in six.iteritems(self.__custom_headers):
-                self.__http.putheader(key, val)
+            # Sending request with payload
+            request = self.__http.request('POST', self.path, data, headers)
 
-        self.__http.endheaders()
+            # Get reply to flush the request
+            self.__http_response = self.__http.get_response(request)
+            self.code = self.__http_response.status
+            self.message = self.__http_response.reason
+            self.headers = self.__http_response.headers
+        elif self.request == 'httpx':
+            headers = {'Content-Type': 'application/x-thrift', 'Content-Length': str(len(data)), 'User-Agent': user_agent}
+            if self.__custom_headers:
+                headers.update(self.__custom_headers)
+            self.__async_loop.run_until_complete(self.httpx_flush(data, headers))
+        elif self.request == 'httplib' and self.http2:
+            headers = {'Content-Type': 'application/x-thrift', 'Content-Length': str(len(data)), 'User-Agent': user_agent}
+            if self.__custom_headers:
+                headers.update(self.__custom_headers)
 
-        # Write payload
-        self.__http.send(data)
+            # Sending and get reply to request
+            self.__http_response, self.__response_data = self.__http.request(self.url, 'POST', headers=headers, body=data)
+            self.__last_read = 0
+            self.code = self.__http_response.status
+            self.message = self.__http_response.reason
+            self.headers = self.__http_response
+        else:
+            # HTTP request
+            if self.using_proxy() and self.scheme == 'http':
+                # need full URL of real host for HTTP proxy here (HTTPS uses CONNECT tunnel)
+                self.__http.putrequest('POST', 'http://%s:%s%s' %
+                                    (self.realhost, self.realport, self.path))
+            else:
+                self.__http.putrequest('POST', self.path)
 
-        # Get reply to flush the request
-        self.__http_response = self.__http.getresponse()
-        self.code = self.__http_response.status
-        self.message = self.__http_response.reason
-        self.headers = self.__http_response.msg
+            # Write headers
+            self.__http.putheader('Content-Type', 'application/x-thrift')
+            self.__http.putheader('Content-Length', str(len(data)))
+            if not self.__custom_headers or 'User-Agent' not in self.__custom_headers:
+                self.__http.putheader('User-Agent', user_agent)
+
+            if self.__custom_headers:
+                for key, val in six.iteritems(self.__custom_headers):
+                    self.__http.putheader(key, val)
+
+            self.__http.endheaders()
+
+            # Write payload
+            self.__http.send(data)
+
+            # Get reply to flush the request
+            self.__http_response = self.__http.getresponse()
+            self.code = self.__http_response.status
+            self.message = self.__http_response.reason
+            self.headers = self.__http_response.msg
 
     # Decorate if we know how to timeout
     if hasattr(socket, 'getdefaulttimeout'):

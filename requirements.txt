@@ -2,3 +2,6 @@ akad==0.11.1
 requests
 rsa
 PyQRCode
+hyper
+httpx
+httplib2
