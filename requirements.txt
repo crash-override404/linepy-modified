@@ -1,7 +1,9 @@
-akad==0.11.1
+akad
 requests
 rsa
 PyQRCode
 hyper
 httpx
 httplib2
+python-axolotl-curve25519
+pycryptodome

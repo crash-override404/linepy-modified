@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from akad.ttypes import IdentityProvider, LoginResultType, LoginRequest, LoginType
+from akad.ttypes import IdentityProvider, LoginResultType, LoginRequest, LoginType, E2EEKeyChain
 from .server import Server
 from .session import Session
 from .callback import Callback
@@ -67,7 +67,7 @@ class Auth(object):
             self.provider = IdentityProvider.LINE       # LINE
         else:
             self.provider = IdentityProvider.NAVER_KR   # NAVER
-        
+
         if self.appName is None:
             self.appName=self.server.APP_NAME
         self.server.setHeaders('X-Line-Application', self.appName)
@@ -153,13 +153,26 @@ class Auth(object):
         self.tauth = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_AUTH_QUERY_PATH).Talk(isopen=False)
         qrCode = self.tauth.getAuthQrcode(self.keepLoggedIn, self.systemName)
 
-        self.callback.QrUrl('line://au/q/' + qrCode.verifier, self.showQr)
+        if self.e2ee:
+            params = self._e2ee.generateParams()
+            self.callback.QrUrl('line://au/q/%s?%s' % (qrCode.verifier, params), self.showQr)
+        else:
+            self.callback.QrUrl('line://au/q/' + qrCode.verifier, self.showQr)
         self.server.setHeaders('X-Line-Access', qrCode.verifier)
 
         getAccessKey = self.server.getJson(self.server.parseUrl(self.server.LINE_CERTIFICATE_PATH), allowHeader=True)
-        
+        if self.e2ee:
+            public_key = getAccessKey['result']['metadata']['publicKey']
+            encrypted_keychain = getAccessKey['result']['metadata']['encryptedKeyChain']
+            hash_keychain = getAccessKey['result']['metadata']['hashKeyChain']
+            keychain_data = self._e2ee.decryptKeychain(encrypted_keychain, public_key)
+            print ('Public Key :', public_key)
+            print ('Encrypted Keychain :', encrypted_keychain)
+            print ('Hash Keychain :', hash_keychain)
+            print ('Keychain Data :', keychain_data)
+
         self.auth = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_LOGIN_QUERY_PATH).Auth(isopen=False)
-        
+
         try:
             lReq = self.__loginRequest('1', {
                 'keepLoggedIn': self.keepLoggedIn,
@@ -167,7 +180,7 @@ class Auth(object):
                 'identityProvider': IdentityProvider.LINE,
                 'verifier': getAccessKey['result']['verifier'],
                 'accessLocation': self.server.IP_ADDR,
-                'e2eeVersion': 0
+                'e2eeVersion': 1 if self.e2ee else 0
             })
             result = self.auth.loginZ(lReq)
         except:

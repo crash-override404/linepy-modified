@@ -10,8 +10,9 @@ from .server import Server
 from .liff import Liff
 from .shop import Shop
 from .callback import Callback
+from .e2ee import E2EE
 
-class LINE(Auth, Models, Talk, Square, Call, Timeline, Liff, Shop):
+class LINE(Auth, Models, Talk, Square, Call, Timeline, Liff, Shop, E2EE):
 
     def __init__(self, idOrAuthToken=None, passwd=None, **kwargs):
         """
@@ -27,7 +28,8 @@ class LINE(Auth, Models, Talk, Square, Call, Timeline, Liff, Shop):
             - **channelId**: Channel ID to login Timeline. Default: None
             - **keepLoggedIn**: Keep logged in if succesfull login. Default: True
             - **customThrift**: Increase speed thrift with custom thrift. Default: False
-            - **callback**: Use custom callback.
+            - **callback**: Use custom callback. Default: None
+            - **e2ee**: Use e2ee login. Default: False
         :return:
         """
         self.certificate = kwargs.pop('certificate', None)
@@ -39,7 +41,12 @@ class LINE(Auth, Models, Talk, Square, Call, Timeline, Liff, Shop):
         self.keepLoggedIn = kwargs.pop('keepLoggedIn', True)
         self.customThrift = kwargs.pop('customThrift', False)
         self.ignoreSquare = kwargs.pop('ignoreSquare', True)
-        callback = kwargs.pop("callback", None)
+        self.e2ee = kwargs.pop('e2ee', False)
+        callback = kwargs.pop('callback', None)
+        if self.e2ee:
+            self._e2ee = E2EE()
+        else:
+            self._e2ee = None
         Auth.__init__(self)
         if callback and callable(callback):
             self.callback = Callback(callback)
