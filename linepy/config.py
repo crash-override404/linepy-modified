@@ -33,14 +33,14 @@ class Config(object):
     }
 
     APP_VERSION = {
-        'ANDROID': '10.1.1',
-        'IOS': '10.1.1',
-        'ANDROIDLITE': '2.11.1',
-        'DESKTOPWIN': '5.21.3',
-        'DESKTOPMAC': '5.21.3',
-        'IOSIPAD': '10.1.1',
-        'CHROMEOS': '2.3.3',
-        'DEFAULT': '10.1.1'
+        'ANDROID': '10.5.2',
+        'IOS': '10.3.0',
+        'ANDROIDLITE': '2.12.0',
+        'DESKTOPWIN': '5.24.0',
+        'DESKTOPMAC': '5.23.0',
+        'IOSIPAD': '10.3.0',
+        'CHROMEOS': '2.3.7',
+        'DEFAULT': '10.5.2'
     }
 
     SYSTEM_VERSION = {
