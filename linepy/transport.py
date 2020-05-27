@@ -2,7 +2,9 @@
 from io import BytesIO
 from six.moves import urllib, http_client
 import os, socket, sys, warnings, base64, time, json, asyncio, six
-import hyper, httpx, httplib2
+import hyper, httpx, httplib2, requests
+
+from requests_futures.sessions import FuturesSession
 
 from thrift.transport.TTransport import TTransportBase
 try:
@@ -64,6 +66,14 @@ class THttpClient(TTransportBase):
                     self.__http = hyper.HTTPConnection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
             elif self.request == 'httpx':
                 self.__http = httpx.AsyncClient(base_url='%s://%s' % (self.scheme, self.host), http2=self.http2)
+            elif self.request == 'requests':
+                self.__http = requests.Session()
+                if self.using_proxy():
+                    self.__http.proxies = urllib.request.getproxies()
+            elif self.request == 'requests-futures':
+                self.__http = FuturesSession()
+                if self.using_proxy():
+                    self.__http.proxies = urllib.request.getproxies()
             else:
                 if self.http2:
                     self.__http = httplib2.Http()
@@ -105,6 +115,14 @@ class THttpClient(TTransportBase):
                 self.__http = hyper.HTTPConnection(self.host, self.port, proxy_host=self.realhost, proxy_port=self.realport, proxy_headers=self.proxy_headers)
         elif self.request == 'httpx':
             self.__http = httpx.AsyncClient(base_url='%s://%s' % (self.scheme, self.host), http2=self.http2)
+        elif self.request == 'requests':
+            self.__http = requests.Session()
+            if self.using_proxy():
+                self.__http.proxies = urllib.request.getproxies()
+        elif self.request == 'requests-futures':
+            self.__http = FuturesSession()
+            if self.using_proxy():
+                self.__http.proxies = urllib.request.getproxies()
         else:
             if self.http2:
                 self.__http = httplib2.Http()
@@ -142,14 +160,10 @@ class THttpClient(TTransportBase):
         self.__custom_headers = headers
 
     def read(self, sz):
-        if self.request == 'httpx' or (self.request == 'httplib' and self.http2):
-            max_sz = self.__last_read + sz
-            min_sz = self.__last_read
-            self.__last_read = max_sz
-            content = self.__response_data[min_sz:max_sz]
-        else:
-            content = self.__http_response.read(sz)
-        return content
+        max_sz = self.__last_read + sz
+        min_sz = self.__last_read
+        self.__last_read = max_sz
+        return self.__response_data[min_sz:max_sz]
 
     def write(self, buf):
         self.__wbuf.write(buf)
@@ -210,6 +224,7 @@ class THttpClient(TTransportBase):
 
             # Get reply to flush the request
             self.__http_response = self.__http.get_response(request)
+            self.__response_data = self.__http_response.read()
             self.code = self.__http_response.status
             self.message = self.__http_response.reason
             self.headers = self.__http_response.headers
@@ -229,6 +244,33 @@ class THttpClient(TTransportBase):
             self.code = self.__http_response.status
             self.message = self.__http_response.reason
             self.headers = self.__http_response
+        elif self.request == 'requests':
+            headers = {'Content-Type': 'application/x-thrift', 'Content-Length': str(len(data)), 'User-Agent': user_agent}
+            if self.__custom_headers:
+                headers.update(self.__custom_headers)
+
+            # Sending and get reply to request
+            self.__http_response = self.__http.request('POST', self.url, data=data, headers=headers)
+            self.__response_data = self.__http_response.content
+            self.__last_read = 0
+            self.code = self.__http_response.status_code
+            self.message = self.__http_response.reason
+            self.headers = self.__http_response.headers
+        elif self.request == 'requests-futures':
+            headers = {'Content-Type': 'application/x-thrift', 'Content-Length': str(len(data)), 'User-Agent': user_agent}
+            if self.__custom_headers:
+                headers.update(self.__custom_headers)
+
+            # Sending request with payload
+            request = self.__http.request('POST', self.url, data=data, headers=headers)
+
+            # Get reply to flush the request
+            self.__http_response = request.result()
+            self.__response_data = self.__http_response.content
+            self.__last_read = 0
+            self.code = self.__http_response.status_code
+            self.message = self.__http_response.reason
+            self.headers = self.__http_response.headers
         else:
             # HTTP request
             if self.using_proxy() and self.scheme == 'http':
@@ -255,6 +297,7 @@ class THttpClient(TTransportBase):
 
             # Get reply to flush the request
             self.__http_response = self.__http.getresponse()
+            self.__response_data = self.__http_response.read()
             self.code = self.__http_response.status
             self.message = self.__http_response.reason
             self.headers = self.__http_response.msg

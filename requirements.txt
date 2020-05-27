@@ -1,5 +1,6 @@
 akad
 requests
+requests-futures
 rsa
 PyQRCode
 hyper

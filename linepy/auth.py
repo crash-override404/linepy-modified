@@ -74,7 +74,7 @@ class Auth(object):
         self.tauth = Session(self.server.LINE_HOST_DOMAIN, self.server.Headers, self.server.LINE_AUTH_QUERY_PATH).Talk(isopen=False)
 
         rsaKey = self.tauth.getRSAKeyInfo(self.provider)
-        
+
         message = (chr(len(rsaKey.sessionKey)) + rsaKey.sessionKey +
                    chr(len(_id)) + _id +
                    chr(len(passwd)) + passwd).encode('utf-8')
@@ -104,7 +104,7 @@ class Auth(object):
         })
 
         result = self.auth.loginZ(lReq)
-        
+
         if result.type == LoginResultType.REQUIRE_DEVICE_CONFIRM:
             self.callback.PinVerified(result.pinCode)
 
@@ -122,7 +122,7 @@ class Auth(object):
                 result = self.auth.loginZ(lReq)
             except:
                 raise Exception('Login failed')
-            
+
             if result.type == LoginResultType.SUCCESS:
                 if result.certificate is not None:
                     with open(_id + '.crt', 'w') as f:
@@ -155,9 +155,9 @@ class Auth(object):
 
         if self.e2ee:
             params = self._e2ee.generateParams()
-            self.callback.QrUrl('line://au/q/%s?%s' % (qrCode.verifier, params), self.showQr)
+            self.callback.QrUrl('https://line.me/R/au/q/%s?%s' % (qrCode.verifier, params), self.showQr)
         else:
-            self.callback.QrUrl('line://au/q/' + qrCode.verifier, self.showQr)
+            self.callback.QrUrl('https://line.me/R/au/q/' + qrCode.verifier, self.showQr)
         self.server.setHeaders('X-Line-Access', qrCode.verifier)
 
         getAccessKey = self.server.getJson(self.server.parseUrl(self.server.LINE_CERTIFICATE_PATH), allowHeader=True)
