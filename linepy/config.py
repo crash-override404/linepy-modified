@@ -62,10 +62,10 @@ class Config(object):
     IP_ADDR     = '8.8.8.8'
     EMAIL_REGEX = re.compile(r"[^@]+@[^@]+\.[^@]+")
     URL_REGEX   = re.compile(r'^(?:http|ftp)s?://' r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' r'localhost|' r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' r'(?::\d+)?' r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-    MID_REGEX   = re.compile(r'u\w{32}')
-    GID_REGEX   = re.compile(r'c\w{32}')
-    RID_REGEX   = re.compile(r'r\w{32}')
-    ALLIDS_REGEX= re.compile(r'(?:u\w{32}|c\w{32}|r\w{32})')
+    MID_REGEX   = re.compile(r'u[a-f0-9]{32}')
+    GID_REGEX   = re.compile(r'c[a-f0-9]{32}')
+    RID_REGEX   = re.compile(r'r[a-f0-9]{32}')
+    ALLIDS_REGEX= re.compile(r'[ucr][a-f0-9]{32}')
 
     def __init__(self, appType=None):
         if appType:
