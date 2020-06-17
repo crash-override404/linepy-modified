@@ -33,24 +33,24 @@ class Config(object):
     }
 
     APP_VERSION = {
-        'ANDROID': '10.8.3',
-        'IOS': '10.8.0',
+        'ANDROID': '10.10.1',
+        'IOS': '10.9.0',
         'ANDROIDLITE': '2.14.0',
         'DESKTOPWIN': '6.0.3',
         'DESKTOPMAC': '6.0.3',
-        'IOSIPAD': '10.8.0',
+        'IOSIPAD': '10.9.0',
         'CHROMEOS': '2.3.8',
-        'DEFAULT': '10.6.5'
+        'DEFAULT': '10.9.0'
     }
 
     SYSTEM_VERSION = {
         'ANDROID': '10.0',
-        'IOS': '13.4.1',
+        'IOS': '13.5.1',
         'ANDROIDLITE': '10.0',
         'DESKTOPWIN': '10.0',
         'DESKTOPMAC': '10.15.1',
-        'IOSIPAD': '13.4.1',
-        'CHROMEOS': '81.0',
+        'IOSIPAD': '13.5.1',
+        'CHROMEOS': '83.0',
         'DEFAULT': '10.0'
     }
 
