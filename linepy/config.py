@@ -33,25 +33,25 @@ class Config(object):
     }
 
     APP_VERSION = {
-        'ANDROID': '10.10.1',
-        'IOS': '10.10.0',
-        'ANDROIDLITE': '2.14.0',
-        'DESKTOPWIN': '6.1.0',
-        'DESKTOPMAC': '6.0.3',
-        'IOSIPAD': '10.10.0',
-        'CHROMEOS': '2.3.8',
-        'DEFAULT': '10.9.0'
+        'IOS': '11.4.1',
+        'IOSIPAD': '11.4.1',
+        'ANDROID': '11.5.1',
+        'ANDROIDLITE': '2.17.0',
+        'DESKTOPWIN': '6.7.2',
+        'DESKTOPMAC': '6.7.2',
+        'CHROMEOS': '2.4.3',
+        'DEFAULT': '11.2.0'
     }
 
     SYSTEM_VERSION = {
+        'IOS': '14.4.2',
+        'IOSIPAD': '14.4.2',
         'ANDROID': '10.0',
-        'IOS': '13.5.1',
         'ANDROIDLITE': '10.0',
         'DESKTOPWIN': '10.0',
-        'DESKTOPMAC': '10.15.1',
-        'IOSIPAD': '13.5.1',
-        'CHROMEOS': '83.0',
-        'DEFAULT': '10.0'
+        'DESKTOPMAC': '11.2.3',
+        'CHROMEOS': '89.0.4',
+        'DEFAULT': '14.2'
     }
 
     APP_TYPE    = 'DESKTOPWIN'
